@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordinamento e Download Excel</title>
+
+    <!-- Link Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* Font e colori di base */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        :root {
+            --primary-color: #13315C;
+            --secondary-color: #13315C;
+            --button-hover-color: #0B2545;
+            --text-color: #333;
+            --text-light-color: #555;
+            --input-bg-color: #ffffff;
+            --input-border-color: #8DA9C4;
+            --footer-bg-color: #222;
+            --footer-text-color: #ccc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-image: url('background-image.webp');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Overlay sfondo */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+
+        /* Stile per l'immagine in alto a destra */
+        .logo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 150px;
+            height: auto;
+            filter: brightness(0) invert(1);
+        }
+
+        /* Contenitore principale */
+        .container {
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            animation: slideIn 1s ease-in-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* Nascondiamo il vero campo input file */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Pulsante personalizzato con icona */
+        .upload-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px dashed var(--primary-color);
+            background-color: #f9f9f9;
+            color: var(--primary-color);
+            border-radius: 10px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            margin-bottom: 20px;
+            font-weight: 500;
+            justify-content: center;
+        }
+
+        .upload-btn:hover {
+            background-color: #f6f7ff;
+            border-color: var(--button-hover-color);
+        }
+
+        .upload-btn i {
+            margin-right: 10px; /* Spazio tra icona e testo */
+        }
+
+        /* Lista dei file selezionati */
+        .file-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 10px 0;
+            color: var(--primary-color);
+        }
+
+        .file-list li {
+            margin: 5px 0;
+        }
+
+        input[type="text"] {
+            padding: 15px;
+            border: 2px solid var(--input-border-color);
+            background-color: var(--input-bg-color);
+            border-radius: 10px;
+            width: 100%;
+            font-size: 16px;
+            color: var(--text-color);
+            margin-bottom: 20px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--button-hover-color);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            outline: none;
+        }
+
+        /* Pulsanti principali */
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            margin-bottom: 15px;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(77, 137, 248, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background-color: var(--button-hover-color);
+            transform: scale(1.1);
+        }
+
+        button:active {
+            animation: bounce 0.3s ease;
+            transform: scale(0.95);
+        }
+
+        @keyframes bounce {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Barra di caricamento */
+        .progress-container {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 30px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background-color: var(--primary-color);
+            width: 0;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-weight: 600;
+            transition: width 0.4s ease-in-out;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--footer-bg-color);
+            color: var(--footer-text-color);
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            width: 100%;
+        }
+
+        footer a {
+            color: var(--footer-text-color);
+            text-decoration: none;
+            padding: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: var(--primary-color);
+        }
+
+        footer p {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Logo in alto a destra -->
+<img src="logo.png" alt="Logo" class="logo">
+
+<div class="container">
+    <h2>Carica i tuoi file Excel (max 4)</h2>
+
+    <!-- Pulsante per scegliere file -->
+    <label class="upload-btn" for="fileUpload">
+        <i class="fas fa-upload"></i> Scegli i file (massimo 4)
+    </label>
+    <input type="file" id="fileUpload" accept=".xls,.xlsx" multiple onchange="checkFiles()" />
+
+    <!-- Lista per visualizzare i file caricati -->
+    <ul class="file-list" id="fileList"></ul>
+
+    <br><br>
+    <button onclick="handleFiles()">Carica e Ordina</button>
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar">0%</div>
+    </div>
+    <br><br>
+
+    <h3>Scarica il file ordinato</h3>
+    <input type="text" id="fileName" placeholder="Nome del file">
+    <button onclick="downloadFile()">Scarica</button>
+</div>
+
+<footer>
+    <p>&copy; 2024 Teleco. Tutti i diritti riservati.</p>
+    <p>
+        <a href="#">Privacy</a> | 
+        <a href="#">Termini di Servizio</a> | 
+        <a href="#">Contattaci</a>
+    </p>
+</footer>
+
+<script>
+// Variabile globale per memorizzare i dati filtrati
+let filteredData = [];
+
+// Funzione per verificare che il numero di file non superi 4 e per visualizzare i file selezionati
+function checkFiles() {
+    const fileInput = document.getElementById('fileUpload');
+    const fileListDisplay = document.getElementById('fileList');
+    const files = fileInput.files;
+
+    fileListDisplay.innerHTML = ''; // Resetta la lista
+
+    if (files.length > 4) {
+        alert('Puoi caricare un massimo di 4 file.');
+        fileInput.value = ''; // Reset del campo file
+    } else {
+        // Aggiungi ogni file alla lista
+        Array.from(files).forEach(file => {
+            const listItem = document.createElement('li');
+            listItem.textContent = file.name;
+            fileListDisplay.appendChild(listItem);
+        });
+    }
+}
+
+// Funzione per leggere e gestire i file Excel caricati
+function handleFiles() {
+    const fileInput = document.getElementById("fileUpload");
+    const files = fileInput.files;
+
+    if (files.length === 0) {
+        alert("Nessun file selezionato.");
+        return;
+    }
+
+    filteredData = []; // Resettiamo i dati filtrati
+
+    let fileCount = 0; // Per tenere traccia del progresso
+    const progressBar = document.getElementById('progress-bar');
+
+    Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+
+        reader.onloadstart = function() {
+            progressBar.style.width = (20 * (index + 1)) + '%';
+            progressBar.textContent = (20 * (index + 1)) + '%';
+        };
+
+        reader.onload = function (e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+                console.log("Dati letti dal file:", jsonData);
+
+                // Filtra i record con "Profilo" contenente "CdR C", "CdR CL" o "CdR L"
+                const filtered = jsonData.filter(record => 
+                    record.Profilo && (
+                        record.Profilo.includes("CdR C") || 
+                        record.Profilo.includes("CdR CL") || 
+                        record.Profilo.includes("CdR L")
+                    )
+                );
+
+                console.log("Record filtrati dal file:", filtered);
+
+                // Aggiungi i dati filtrati al totale
+                filteredData = filteredData.concat(filtered);
+                fileCount++;
+
+                if (fileCount === files.length) {
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = 'Caricamento Completato';
+                    console.log("Dati totali filtrati:", filteredData);
+                }
+            } catch (error) {
+                console.error("Errore durante il caricamento del file:", error.message);
+                progressBar.style.width = '0%';
+                progressBar.textContent = 'Errore nel caricamento';
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// Funzione per ordinare le date nel formato gg/mm/aaaa hh:mm:ss
+function parseDate(dateStr) {
+    const [day, month, yearAndTime] = dateStr.split('/');
+    const [year, time] = yearAndTime.split(' ');
+    return new Date(`${year}-${month}-${day}T${time}`);
+}
+
+// Funzione per scaricare il file Excel con i dati filtrati e suddivisi nei fogli
+function downloadFile() {
+    if (filteredData.length === 0) {
+        alert("Non ci sono dati da scaricare. Assicurati di aver caricato e filtrato i file.");
+        return;
+    }
+
+    const fileName = document.getElementById("fileName").value || "dati_filtrati";
+    const wb = XLSX.utils.book_new();
+
+    // Funzione per creare i fogli divisi in base ai criteri specificati e ordina i dati
+    function addSheet(sheetName, filterFn) {
+        let sheetData = filteredData.filter(filterFn);
+        
+        // Se il foglio ha dati, procedi
+        if (sheetData.length > 0) {
+            // Ordina per Cognome, Nome e Data Evento
+            sheetData.sort((a, b) => {
+                if (a.Cognome < b.Cognome) return -1;
+                if (a.Cognome > b.Cognome) return 1;
+                if (a.Nome < b.Nome) return -1;
+                if (a.Nome > b.Nome) return 1;
+
+                // Ordinamento cronologico per Data Evento
+                const dateA = parseDate(a['Data Evento']);
+                const dateB = parseDate(b['Data Evento']);
+                return dateA - dateB;
+            });
+
+            // Aggiungi una riga vuota ogni volta che cambia il Codice
+            let previousCodice = null;
+            const newData = [];
+
+            sheetData.forEach(record => {
+                if (previousCodice && previousCodice !== record.Codice) {
+                    newData.push({}); // Aggiungi riga vuota
+                }
+                newData.push(record);
+                previousCodice = record.Codice;
+            });
+
+            const ws = XLSX.utils.json_to_sheet(newData);
+
+            // Manteniamo il formato originale gg/mm/aaaa hh:mm:ss per la colonna "Data Evento"
+            Object.keys(ws).forEach(cell => {
+                if (ws[cell].v && typeof ws[cell].v === 'string' && ws[cell].v.match(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/)) {
+                    ws[cell].t = "s"; // Manteniamo come stringa il formato della data
+                }
+            });
+
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        }
+    }
+
+    // Crea i fogli con i nomi specificati e ordina i dati
+    addSheet("Tornelli S.Paolo", record => 
+        record.Terminale && (
+            record.Terminale.includes("Tornello H") || 
+            record.Terminale.includes("Tornello Vetrata") || 
+            record.Terminale.includes("Tornello Muro")
+        )
+    );
+
+    addSheet("San Paolo", record => 
+        record.Terminale && record.Terminale.includes("CdR - San Paolo")
+    );
+
+    addSheet("Gianicolo", record => 
+        record.Terminale && (
+            record.Terminale.includes("CdR - Gerini - Presenze") || 
+            record.Terminale.includes("CdR - Sant'Onofrio - Presenze")
+        )
+    );
+
+    addSheet("Palidoro", record => 
+        record.Terminale && (
+            record.Terminale.includes("CdR - Palidoro - Paolo VI") || 
+            record.Terminale.includes("CdR - Palidoro - III Pad.")
+        )
+    );
+
+    addSheet("Villa Pamphili", record => 
+        record.Terminale && record.Terminale.includes("CdR - Villa Pamphili")
+    );
+
+    addSheet("Baldelli", record => 
+        record.Terminale && record.Terminale.includes("CdR - Baldelli PT")
+    );
+
+    addSheet("Santa Marinella", record => 
+        record.Terminale && record.Terminale.includes("CdR - Santa Marinella")
+    );
+
+    // Scrivi e scarica il file Excel con i fogli
+    XLSX.writeFile(wb, `${fileName}.xlsx`);
+}
+</script>
+
+</body>
+</html>
