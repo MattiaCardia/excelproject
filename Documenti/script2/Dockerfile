@@ -4,9 +4,9 @@ FROM nginx:1.22
 # Rimuovi i file di default di Nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copia i file del tuo progetto nella directory di default di Nginx
-COPY . /usr/share/nginx/html
+# Copia il file Ordinamentoexcel.html nella directory di default di Nginx e rinominalo come index.html
+COPY Ordinamentoexcel.html /usr/share/nginx/html/index.html
 
-# Configura Nginx (opzionale se hai un file nginx.conf personalizzato)
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Imposta i permessi corretti sui file
+RUN chmod -R 755 /usr/share/nginx/html
 
